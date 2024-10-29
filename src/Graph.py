@@ -1,3 +1,6 @@
+import random
+import time
+
 class Node:
     def __init__(self, id):
         self.id = id
@@ -8,9 +11,11 @@ class Node:
 
 class Edge:
     def __init__(self, start, end, d=0, directed=True):
+        # if directed and start > end:
+        #     start, end = end, start
         self.start = start
         self.end = end
-        self.edge = (start, end)
+        self.edge = (self.start, self.end)
         self.d = d
         # gerichtete oder ungerichtete Kante, gerichtet = True
         self.directed = directed
@@ -24,7 +29,16 @@ class Edge:
         return (self.start, self.end) == (other.start, other.end)
 
     def __hash__(self):
+        # TODO: Richtung in hash abdecken
         return hash((self.start, self.end, self.directed))
+
+    # TODO
+    def incident(self, directed=True):
+        pass
+
+    # TODO
+    def adjacent(self, directed=True):
+        pass
 
     def __str__(self):
         repr = f"{self.start},{self.end}"
@@ -36,6 +50,12 @@ class Graph:
     def __init__(self, V, E):
         self.V = V
         self.E = E
+
+    def is_complete_graph(self, directed=True):
+        N = (len(self.V) * (len(self.V) - 1))
+        if directed:
+            return len(self.E) == N
+        return len(self.E) == N / 2
 
     def reachability_set(self, v):
         # Schritt 0
@@ -73,6 +93,25 @@ class Graph:
         return Z
 
 
+def create_random_graph(n, m):
+    """Create random graph with n vertices and m edges."""
+    V = {Node(i) for i in range(1, n + 1)}
+    E = set()
+    done = m
+    while done != 0:
+        i = random.randint(1, n)
+        j = random.randint(1, m)
+        k = random.randint(0, 1)
+        if i != j and k == 0:
+            e = (Edge(i, j, False))
+        if i != j and k == 1:
+            e = Edge(i, j)
+        if e not in E:
+            E.add(e)
+            done -= 1
+    return Graph(V, E)
+
+
 def create_undirected_graph(G: Graph):
     new_edges = set()
     for edge in G.E:
@@ -84,27 +123,13 @@ def create_undirected_graph(G: Graph):
 
 
 def main():
-    V = set()
-    E = set()
+    # 2.2 Kanten
+    V = {Node(i) for i in range(1, 8)}
+    E = {Edge(5, 1), Edge(2, 3), Edge(2, 6), Edge(3, 7), Edge(6, 7), Edge(7, 4)}
 
-    # Knoten hinzufuegen
-    for i in range(1, 9):
-        V.add(Node(i))
-
-    # Kanten hinzufuegen
-    # E.add(Edge(5, 1))
-    # E.add(Edge(2, 3))
-    # E.add(Edge(2, 6))
-    # E.add(Edge(3, 7))
-    # E.add(Edge(6, 7))
-    # E.add(Edge(7, 4))
-
-    E.add(Edge(1, 2, False))
-    E.add(Edge(2, 7, False))
-    E.add(Edge(5, 8))
-    E.add(Edge(8, 6))
-    E.add(Edge(8, 4))
-    E.add(Edge(6, 4))
+    # Bsp aus Skript
+    V = {Node(i) for i in range(1, 9)}
+    E = {Edge(1, 2, False), Edge(2, 7, False), Edge(5, 8), Edge(8, 6), Edge(8, 4), Edge(6, 4)}
 
     G = Graph(V, E)
 
@@ -122,6 +147,24 @@ def main():
         print(f"{count+1}-te Zusammenhangskomponente:")
         components = "{" + ','.join([str(e) for e in component]) + "}"
         print(f"{components}")
+
+    n = 100
+    m = 100
+
+    G2 = create_random_graph(n, m)
+    for i in range(10):
+        v = random.randint(1, n)
+        start_r = time.time()
+        _ = G2.reachability_set(Node(v))
+        end_r = time.time()
+        print(f"Iteration {i + 1} - Benoetigte Rechenzeit fuer Erreichbarkeitsmenge: {end_r - start_r}")
+
+    for i in range(10):
+        G3 = create_random_graph(n, m)
+        start_c = time.time()
+        _ = G3.compute_connected_components()
+        end_c = time.time()
+        print(f"Iteration {i + 1} - Benoetigte Rechenzeit fuer Zusammenhangskomponente: {end_c - start_c}")
 
 
 if __name__ == "__main__":
