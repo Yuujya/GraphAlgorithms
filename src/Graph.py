@@ -1,5 +1,6 @@
 import random
 import time
+import math
 
 
 # Ein Knoten hat einen Namen
@@ -31,6 +32,7 @@ class Edge:
             self.start = min(start, end)
             self.end = max(start, end)
         self.directed = directed
+        self.weight = weight
 
     def __hash__(self):
         if self.directed:
@@ -126,6 +128,15 @@ class Graph:
             return adjacent_vertices
         return None
 
+    def incident_edges(self, start_vertex):
+        incident_edges = set()
+        if start_vertex in self.vertices:
+            for edge in self.edges:
+                if self.is_incident(start_vertex, edge):
+                    incident_edges.add(edge)
+            return incident_edges
+        return None
+
     def reachability_set(self, start_vertex):
         if start_vertex in self.vertices:
             vertices_to_check = {start_vertex}
@@ -136,7 +147,8 @@ class Graph:
                 reachable_vertices = reachable_vertices | {k}
                 reachable_vertices_from_k = self.adjacent_vertices(k)
                 for j in reachable_vertices_from_k:
-                    if Edge(k.id, j.id, True) in self.edges and j not in reachable_vertices:
+                    if Edge(k.id, j.id, True) in self.edges and \
+                            j not in reachable_vertices:
                         vertices_to_check = vertices_to_check | {j}
             return reachable_vertices
         return None
@@ -149,8 +161,55 @@ class Graph:
             k = next(iter(vertices_to_check))
             reachable_vertices = self.reachability_set(k)
             connected_components.append(reachable_vertices)
-            vertices_to_check = vertices_to_check.difference(reachable_vertices)
+            vertices_to_check = vertices_to_check.\
+                difference(reachable_vertices)
         return connected_components
+
+    def distance(self, start_vertex, end_vertex, directed):
+        if start_vertex in self.vertices and end_vertex in self.vertices:
+            for edge in self.edges:
+                if Edge(start_vertex.id, end_vertex.id, directed) == edge:
+                    return edge.weight
+        return -1
+
+    def dijkstra(self, start_vertex, target_vertex=None):
+        distances = {}
+        predecessors = {}
+        for vertex in self.vertices:
+            if vertex.id != start_vertex.id:
+                distances[vertex.id] = math.inf
+                predecessors[vertex.id] = None
+        distances[start_vertex.id] = 0
+        predecessors[start_vertex.id] = 0
+
+        remaining_vertices = self.vertices
+        while remaining_vertices:
+            i = Vertex(distance_argmin(distances, remaining_vertices))
+            remaining_vertices = remaining_vertices - {i}
+
+            adjacent_vertices = self.adjacent_vertices(i)
+            for adjacent_vertex in adjacent_vertices:
+                if adjacent_vertex in remaining_vertices and (distances[adjacent_vertex.id] > distances[i.id] + self.distance(i, adjacent_vertex, False)):
+                    distances[adjacent_vertex.id] = distances[i.id] + self.distance(i, adjacent_vertex, False)
+                    predecessors[adjacent_vertex.id] = i.id
+
+        if not target_vertex:
+            return predecessors, distances, []
+        # Weg bis target_vertex zusammenbauen
+        shortest_path = [target_vertex]
+        k = target_vertex
+        while predecessors[k.id] != 0:
+            k = Vertex(predecessors[k.id])
+            shortest_path.insert(0, k)
+        return predecessors, distances, shortest_path
+
+
+def distance_argmin(distances, vertices):
+    min_index = next(iter(vertices))
+    for vertex in vertices:
+        if distances[vertex.id] < distances[min_index.id]:
+            min_index = vertex
+    return min_index.id
 
 
 def create_undirected_graph(graph: Graph):
@@ -183,23 +242,7 @@ def create_random_graph(n, m):
 
 
 def main():
-    E = {Edge(1, 2, False), Edge(2, 3, False), Edge(3, 4, True)}
-    V = {Vertex(1), Vertex(2), Vertex(3), Vertex(4)}
-    G = Graph(V, E, False)
-    to_find = Vertex(3)
-    print(f"Knotengrad von {to_find}: {G.degree(to_find)}")
-    print(G.is_incident(Vertex(3), Edge(3, 4, False)))
-    print(G.is_adjacent(Vertex(2), Vertex(4)))
-
-    E2 = {Edge(1, 2, True), Edge(1, 3, True), Edge(2, 1, True), Edge(2, 3, True)}
-    V2 = {Vertex(i) for i in range(1, 4+1)}
-    G2 = Graph(V2, E2, True)
-
-    to_find2 = Vertex(5)
-    print(f"Ausgehender Knotengrad von {to_find2}: {G2.outdegree(to_find2)}")
-    print(f"Eingehender Knotengrad von {to_find2}: {G2.indegree(to_find2)}")
-    print(f"Isolierter Knoten {to_find2}: {G2.is_isolated(to_find2)}")
-
+    # Aufgabe 2.2.a
     E3 = {Edge(1, 2, False), Edge(2, 7, False), Edge(5, 8, True), Edge(8, 6, True), Edge(8, 4, True), Edge(6, 4, True)}
     e1 = Edge(8, 6, False)
     print(e1 in E3)
@@ -211,6 +254,7 @@ def main():
     reachable_set = "{" + ','.join([str(r) for r in reachable_vertices]) + "}"
     print(f"{reachable_set}")
 
+    # Aufgabe 2.2.b
     G4 = create_undirected_graph(G3)
     connected_components = G4.connected_components()
     print("Zusammenhangskomponente von G berechnen:")
@@ -219,23 +263,45 @@ def main():
         components = "{" + ','.join([str(e) for e in component]) + "}"
         print(f"{components}")
 
-    n = 100
-    m = 200
+    # Aufgabe 3.4
+    # n = 100
+    # m = 200
 
-    G2 = create_random_graph(n, m)
-    for i in range(10):
-        v = random.randint(1, n)
-        start_r = time.time()
-        _ = G2.reachability_set(Vertex(v))
-        end_r = time.time()
-        print(f"Iteration {i + 1} - Benoetigte Rechenzeit fuer Erreichbarkeitsmenge: {end_r - start_r}")
+    # G2 = create_random_graph(n, m)
+    # for i in range(10):
+    #     v = random.randint(1, n)
+    #     start_r = time.time()
+    #     _ = G2.reachability_set(Vertex(v))
+    #     end_r = time.time()
+    #     print(f"Iteration {i + 1} - Benoetigte Rechenzeit fuer Erreichbarkeitsmenge: {end_r - start_r}")
 
-    for i in range(10):
-        G3 = create_random_graph(n, m)
-        start_c = time.time()
-        _ = G3.connected_components()
-        end_c = time.time()
-        print(f"Iteration {i + 1} - Benoetigte Rechenzeit fuer Zusammenhangskomponente: {end_c - start_c}")
+    # for i in range(10):
+    #     G3 = create_random_graph(n, m)
+    #     start_c = time.time()
+    #     _ = G3.connected_components()
+    #     end_c = time.time()
+    #     print(f"Iteration {i + 1} - Benoetigte Rechenzeit fuer Zusammenhangskomponente: {end_c - start_c}")
+
+    # Bsp 2.19
+    E = {Edge(1, 2, False, 1), Edge(2, 4, False, 3), Edge(4, 3, False, 4), Edge(1, 3, False, 3), Edge(5, 3, False, 3), Edge(5, 4, False, 1)}
+    V = {Vertex(i) for i in range(1, 5+1)}
+    G = Graph(V, E, False)
+
+    start_vertex = Vertex(1)
+    target_vertex = Vertex(5)
+    _, _, shortest_path = G.dijkstra(start_vertex, target_vertex)
+    print(f"Kuerzester Weg: {[vertex.id for vertex in shortest_path]}")
+
+    # Aufgabe 4.1
+    E2 = {Edge(5, 1, True, 5), Edge(2, 3, True, 3), Edge(2, 6, True, 4), Edge(6, 7, True, 1), Edge(7, 4, True, 2)}
+    V2 = {Vertex(i) for i in range(1, 7+1)}
+    G2 = Graph(V2, E2)
+    start_vertex2 = Vertex(2)
+    target_vertex2 = Vertex(4)
+    _, _, shortest_path2 = G2.dijkstra(start_vertex2, target_vertex2)
+    print(f"#2 Kuerzester Weg: {[vertex.id for vertex in shortest_path2]}")
+    
+    print("done")
 
 
 if __name__ == "__main__":
