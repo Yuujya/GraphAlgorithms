@@ -107,9 +107,9 @@ class Graph:
             return False
         return None
 
-    def is_adjacent(self, first_vertex, second_vertex):
-        if first_vertex in self.vertices and second_vertex in self.vertices:
-            return Edge(first_vertex.id, second_vertex.id, True) in self.edges
+    def is_adjacent(self, start_vertex, end_vertex):
+        if start_vertex in self.vertices and end_vertex in self.vertices:
+            return Edge(start_vertex.id, end_vertex.id, True) in self.edges
         return None
 
     def is_isolated(self, vertex):
@@ -172,7 +172,7 @@ class Graph:
                     return edge.weight
         return -1
 
-    def dijkstra(self, start_vertex, target_vertex=None):
+    def init_distance_table(self, start_vertex):
         distances = {}
         predecessors = {}
         for vertex in self.vertices:
@@ -181,6 +181,40 @@ class Graph:
                 predecessors[vertex.id] = None
         distances[start_vertex.id] = 0
         predecessors[start_vertex.id] = 0
+        return predecessors, distances
+
+    def build_shortest_path(self, predecessors, distances, target_vertex):
+        if not target_vertex:
+            return predecessors, distances, []
+        # Weg bis target_vertex zusammenbauen
+        shortest_path = [target_vertex]
+        k = target_vertex
+        while predecessors[k.id] != 0:
+            k = Vertex(predecessors[k.id])
+            shortest_path.insert(0, k)
+        return predecessors, distances, shortest_path
+
+    # TODO: wieso gibt die sortierte Kantenfolge die passende Loesung zu 4.3
+    #       aus und nicht die zufaellig generierte Kantenfolge
+    # sortierte Kantenfolge iterieren mit: edge in sorted(self.edges, key=lambda e: (e.start, e.end))
+    def bellman_ford(self, start_vertex, target_vertex=None):
+        predecessors, distances = self.init_distance_table(start_vertex)
+
+        for k in range(len(self.vertices)-1):
+            for edge in self.edges:
+                if predecessors[edge.start] != edge.end and distances[edge.end] > distances[edge.start] + self.distance(Vertex(edge.start), Vertex(edge.end), True):
+                    distances[edge.end] = distances[edge.start] + self.distance(Vertex(edge.start), Vertex(edge.end), True)
+                    predecessors[edge.end] = edge.start
+
+        for edge in self.edges:
+            if distances[edge.end] > distances[edge.start] + self.distance(Vertex(edge.start), Vertex(edge.end), True):
+                print("Kreis mit negativer Laenge existiert")
+                return {}, {}, []
+
+        return self.build_shortest_path(predecessors, distances, target_vertex)
+
+    def dijkstra(self, start_vertex, target_vertex=None):
+        predecessors, distances = self.init_distance_table(start_vertex)
 
         remaining_vertices = self.vertices
         while remaining_vertices:
@@ -193,15 +227,7 @@ class Graph:
                     distances[adjacent_vertex.id] = distances[i.id] + self.distance(i, adjacent_vertex, False)
                     predecessors[adjacent_vertex.id] = i.id
 
-        if not target_vertex:
-            return predecessors, distances, []
-        # Weg bis target_vertex zusammenbauen
-        shortest_path = [target_vertex]
-        k = target_vertex
-        while predecessors[k.id] != 0:
-            k = Vertex(predecessors[k.id])
-            shortest_path.insert(0, k)
-        return predecessors, distances, shortest_path
+        return self.build_shortest_path(predecessors, distances, target_vertex)
 
 
 def distance_argmin(distances, vertices):
@@ -243,20 +269,20 @@ def create_random_graph(n, m):
 
 def main():
     # Aufgabe 2.2.a
-    E3 = {Edge(1, 2, False), Edge(2, 7, False), Edge(5, 8, True), Edge(8, 6, True), Edge(8, 4, True), Edge(6, 4, True)}
+    E1 = {Edge(1, 2, False), Edge(2, 7, False), Edge(5, 8, True), Edge(8, 6, True), Edge(8, 4, True), Edge(6, 4, True)}
     e1 = Edge(8, 6, False)
-    print(e1 in E3)
-    V3 = {Vertex(i) for i in range(1, 8+1)}
-    G3 = Graph(V3, E3, True)
+    print(e1 in E1)
+    V1 = {Vertex(i) for i in range(1, 8+1)}
+    G1 = Graph(V1, E1, True)
     start_vertex = Vertex(5)
-    reachable_vertices = G3.reachability_set(start_vertex)
+    reachable_vertices = G1.reachability_set(start_vertex)
     print(f"Erreichbarkeitsmenge von {start_vertex}:")
     reachable_set = "{" + ','.join([str(r) for r in reachable_vertices]) + "}"
     print(f"{reachable_set}")
 
     # Aufgabe 2.2.b
-    G4 = create_undirected_graph(G3)
-    connected_components = G4.connected_components()
+    G2 = create_undirected_graph(G1)
+    connected_components = G2.connected_components()
     print("Zusammenhangskomponente von G berechnen:")
     for count, component in enumerate(connected_components):
         print(f"{count+1}-te Zusammenhangskomponente:")
@@ -300,7 +326,30 @@ def main():
     target_vertex2 = Vertex(4)
     _, _, shortest_path2 = G2.dijkstra(start_vertex2, target_vertex2)
     print(f"#2 Kuerzester Weg: {[vertex.id for vertex in shortest_path2]}")
-    
+
+    # Bsp 2.24
+    # E3 = {Edge(1, 2, True, 5), Edge(1, 3, True, 2), Edge(2, 4, True, -3), Edge(3, 4, True, 2)}
+    # V3 = {Vertex(i) for i in range(1, 4+1)}
+    # G3 = Graph(V3, E3)
+    # predecessors, distances, shortest_path = G3.bellman_ford(Vertex(1), Vertex(4))
+    # print(f"Abstaende : {distances}")
+    # print(f"Vorgaenger: {predecessors}")
+    # print(f"Kuerzester Weg: {[v.id for v in shortest_path]}")
+
+    # Aufgabe 4.3
+    E4 = {Edge(1, 2, True, 4), Edge(2, 1, True, 3), Edge(1, 4, True, -2),
+          Edge(4, 2, True, 2), Edge(2, 4, True, 2), Edge(2, 3, True, 2),
+          Edge(3, 5, True, 1), Edge(5, 3, True, 3), Edge(4, 5, True, 2),
+          Edge(5, 4, True, 3), Edge(4, 3, True, 6)}
+    V4 = {Vertex(i) for i in range(1, 5+1)}
+    G4 = Graph(V4, E4)
+
+    # TODO: Fehler in Eintraegen von 5 wenn die Kantenfolge nicht sortiert wird
+    predecessors, distances, shortest_path = G4.bellman_ford(Vertex(2))
+    print(f"Abstaende : {distances}")
+    print(f"Vorgaenger: {predecessors}")
+    print(f"Kuerzester Weg: {shortest_path}")
+
     print("done")
 
 
