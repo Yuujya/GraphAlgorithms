@@ -183,20 +183,6 @@ class Graph:
         predecessors[start_vertex.id] = 0
         return predecessors, distances
 
-    def build_shortest_path(self, predecessors, distances, target_vertex):
-        if not target_vertex:
-            return predecessors, distances, []
-        # Weg bis target_vertex zusammenbauen
-        shortest_path = [target_vertex]
-        k = target_vertex
-        while predecessors[k.id] != 0:
-            k = Vertex(predecessors[k.id])
-            shortest_path.insert(0, k)
-        return predecessors, distances, shortest_path
-
-    # TODO: wieso gibt die sortierte Kantenfolge die passende Loesung zu 4.3
-    #       aus und nicht die zufaellig generierte Kantenfolge
-    # sortierte Kantenfolge iterieren mit: edge in sorted(self.edges, key=lambda e: (e.start, e.end))
     def bellman_ford(self, start_vertex, target_vertex=None):
         predecessors, distances = self.init_distance_table(start_vertex)
 
@@ -211,7 +197,7 @@ class Graph:
                 print("Kreis mit negativer Laenge existiert")
                 return {}, {}, []
 
-        return self.build_shortest_path(predecessors, distances, target_vertex)
+        return build_shortest_path(predecessors, distances, target_vertex)
 
     def dijkstra(self, start_vertex, target_vertex=None):
         predecessors, distances = self.init_distance_table(start_vertex)
@@ -227,7 +213,19 @@ class Graph:
                     distances[adjacent_vertex.id] = distances[i.id] + self.distance(i, adjacent_vertex, False)
                     predecessors[adjacent_vertex.id] = i.id
 
-        return self.build_shortest_path(predecessors, distances, target_vertex)
+        return build_shortest_path(predecessors, distances, target_vertex)
+
+
+def build_shortest_path(predecessors, distances, target_vertex):
+    if not target_vertex:
+        return predecessors, distances, []
+    # Weg bis target_vertex zusammenbauen
+    shortest_path = [target_vertex]
+    k = target_vertex
+    while predecessors[k.id] != 0:
+        k = Vertex(predecessors[k.id])
+        shortest_path.insert(0, k)
+    return predecessors, distances, shortest_path
 
 
 def distance_argmin(distances, vertices):
@@ -290,51 +288,32 @@ def main():
         print(f"{components}")
 
     # Aufgabe 3.4
-    # n = 100
-    # m = 200
+    n = 100
+    m = 200
 
-    # G2 = create_random_graph(n, m)
-    # for i in range(10):
-    #     v = random.randint(1, n)
-    #     start_r = time.time()
-    #     _ = G2.reachability_set(Vertex(v))
-    #     end_r = time.time()
-    #     print(f"Iteration {i + 1} - Benoetigte Rechenzeit fuer Erreichbarkeitsmenge: {end_r - start_r}")
+    G2 = create_random_graph(n, m)
+    for i in range(10):
+        v = random.randint(1, n)
+        start_r = time.time()
+        _ = G2.reachability_set(Vertex(v))
+        end_r = time.time()
+        print(f"Iteration {i + 1} - Benoetigte Rechenzeit fuer Erreichbarkeitsmenge: {end_r - start_r}")
 
-    # for i in range(10):
-    #     G3 = create_random_graph(n, m)
-    #     start_c = time.time()
-    #     _ = G3.connected_components()
-    #     end_c = time.time()
-    #     print(f"Iteration {i + 1} - Benoetigte Rechenzeit fuer Zusammenhangskomponente: {end_c - start_c}")
-
-    # Bsp 2.19
-    E = {Edge(1, 2, False, 1), Edge(2, 4, False, 3), Edge(4, 3, False, 4), Edge(1, 3, False, 3), Edge(5, 3, False, 3), Edge(5, 4, False, 1)}
-    V = {Vertex(i) for i in range(1, 5+1)}
-    G = Graph(V, E, False)
-
-    start_vertex = Vertex(1)
-    target_vertex = Vertex(5)
-    _, _, shortest_path = G.dijkstra(start_vertex, target_vertex)
-    print(f"Kuerzester Weg: {[vertex.id for vertex in shortest_path]}")
+    for i in range(10):
+        G3 = create_random_graph(n, m)
+        start_c = time.time()
+        _ = G3.connected_components()
+        end_c = time.time()
+        print(f"Iteration {i + 1} - Benoetigte Rechenzeit fuer Zusammenhangskomponente: {end_c - start_c}")
 
     # Aufgabe 4.1
     E2 = {Edge(5, 1, True, 5), Edge(2, 3, True, 3), Edge(2, 6, True, 4), Edge(6, 7, True, 1), Edge(7, 4, True, 2)}
     V2 = {Vertex(i) for i in range(1, 7+1)}
     G2 = Graph(V2, E2)
-    start_vertex2 = Vertex(2)
-    target_vertex2 = Vertex(4)
-    _, _, shortest_path2 = G2.dijkstra(start_vertex2, target_vertex2)
-    print(f"#2 Kuerzester Weg: {[vertex.id for vertex in shortest_path2]}")
-
-    # Bsp 2.24
-    # E3 = {Edge(1, 2, True, 5), Edge(1, 3, True, 2), Edge(2, 4, True, -3), Edge(3, 4, True, 2)}
-    # V3 = {Vertex(i) for i in range(1, 4+1)}
-    # G3 = Graph(V3, E3)
-    # predecessors, distances, shortest_path = G3.bellman_ford(Vertex(1), Vertex(4))
-    # print(f"Abstaende : {distances}")
-    # print(f"Vorgaenger: {predecessors}")
-    # print(f"Kuerzester Weg: {[v.id for v in shortest_path]}")
+    start_vertex = Vertex(2)
+    target_vertex = Vertex(4)
+    _, _, shortest_path = G2.dijkstra(start_vertex, target_vertex)
+    print(f"Kuerzester Weg von {start_vertex.id} zu {target_vertex.id}: {[v.id for v in shortest_path]}")
 
     # Aufgabe 4.3
     E4 = {Edge(1, 2, True, 4), Edge(2, 1, True, 3), Edge(1, 4, True, -2),
@@ -344,11 +323,12 @@ def main():
     V4 = {Vertex(i) for i in range(1, 5+1)}
     G4 = Graph(V4, E4)
 
-    # TODO: Fehler in Eintraegen von 5 wenn die Kantenfolge nicht sortiert wird
-    predecessors, distances, shortest_path = G4.bellman_ford(Vertex(2))
-    print(f"Abstaende : {distances}")
-    print(f"Vorgaenger: {predecessors}")
-    print(f"Kuerzester Weg: {shortest_path}")
+    start_vertex = Vertex(2)
+    for i in range(1, 5+1):
+        if i != start_vertex.id:
+            target_vertex = Vertex(i)
+            _, _, shortest_path = G4.bellman_ford(Vertex(2), target_vertex)
+            print(f"Kuerzester Weg von {start_vertex.id} zu {target_vertex.id}: {[v.id for v in shortest_path]}")
 
     print("done")
 
