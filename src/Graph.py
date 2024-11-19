@@ -1,6 +1,7 @@
 import random
 import time
 import math
+import copy
 
 
 # Ein Knoten hat einen Namen
@@ -153,7 +154,15 @@ class Graph:
             return reachable_vertices
         return None
 
-    def connected_components(self):
+    def reachability_set_table(self):
+        reachability_table = {}
+        for vertex in self.vertices:
+            reachability_set = self.reachability_set(vertex)
+            for reachibility_vertex in reachability_set:
+                reachability_table[reachibility_vertex.id] = reachability_set
+        return reachability_table
+
+    def connected_components(self) -> list[set[Vertex]]:
         vertices_to_check = self.vertices
         connected_components = []
 
@@ -183,6 +192,8 @@ class Graph:
         predecessors[start_vertex.id] = 0
         return predecessors, distances
 
+    # TODO: an ungerichtete Graphen anpassen,
+    # funktioniert nur fuer gerichtete Graphen
     def bellman_ford(self, start_vertex, target_vertex=None):
         predecessors, distances = self.init_distance_table(start_vertex)
 
@@ -215,6 +226,27 @@ class Graph:
 
         return build_shortest_path(predecessors, distances, target_vertex)
 
+    def add_edge(self, edge):
+        self.edges.add(edge)
+
+    def remove_edge(self, edge):
+        self.edges.remove(edge)
+
+    # TODO: Wie bestimmt man Kreise in dem Graphen?
+    # Annahme Nur die Komponenten aus connected_components sind Inputs
+    def kruskal(self):
+        # MST besitzt alle Knoten, sodass Kanten alle verbinden und minimale Kosten verursachen
+        sorted_edges = sorted(self.edges, key=lambda e: e.weight)
+        mst = Graph(self.vertices, set())
+        mst_prime = copy.deepcopy(mst)
+        for edge in sorted_edges:
+            mst_prime.add_edge(edge)
+            if mst.reachability_set_table() != mst_prime.reachability_set_table():
+                mst.add_edge(edge)
+            else:
+                mst_prime.remove_edge(edge)
+        return mst
+
 
 def build_shortest_path(predecessors, distances, target_vertex):
     if not target_vertex:
@@ -246,8 +278,8 @@ def create_undirected_graph(graph: Graph):
     return Graph(graph.vertices, new_edges, False)
 
 
-# Zufaelliger Graph generieren mit n Knoten und m Kanten
 def create_random_graph(n, m):
+    """Zufaelligen Graph generieren mit n Knoten und m Kanten."""
     vertices = {Vertex(i) for i in range(1, n + 1)}
     edges = set()
     done = m
@@ -327,9 +359,29 @@ def main():
     for i in range(1, 5+1):
         if i != start_vertex.id:
             target_vertex = Vertex(i)
-            _, _, shortest_path = G4.bellman_ford(Vertex(2), target_vertex)
+            _, _, shortest_path = G4.bellman_ford(start_vertex, target_vertex)
             print(f"Kuerzester Weg von {start_vertex.id} zu {target_vertex.id}: {[v.id for v in shortest_path]}")
 
+    sorted_edges4 = sorted(E4, key=lambda e: e.weight)
+    for e in sorted_edges4:
+        print(f"start={e.start} end={e.end} weight={e.weight}")
+
+    # Bsp 3.8
+    # TODO: An Aufgabe 5.5.a pruefen
+    E5 = {Edge(1, 6, False, 1), Edge(1, 2, False, 4), Edge(2, 5, False, 2),
+          Edge(2, 3, False, 3), Edge(1, 3, False, 5), Edge(2, 6, False, 5),
+          Edge(3, 6, False, 4), Edge(4, 3, False, 6), Edge(4, 5, False, 2),
+          Edge(3, 5, False, 3)}
+    V5 = {Vertex(i) for i in range(1, 6+1)}
+    G5 = Graph(V5, E5)
+    mst = G5.kruskal()
+    total_weight = 0
+    for vertex in mst.vertices:
+        print(vertex)
+    for edge in mst.edges:
+        print(edge)
+        total_weight += edge.weight
+    print(f"MST mit Staerke {total_weight}")
     print("done")
 
 
