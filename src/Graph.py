@@ -226,26 +226,95 @@ class Graph:
 
         return build_shortest_path(predecessors, distances, target_vertex)
 
+    def add_vertex(self, vertex):
+        self.vertices.add(vertex)
+
     def add_edge(self, edge):
-        self.edges.add(edge)
+        if Vertex(edge.start) in self.vertices and Vertex(edge.end) in self.vertices:
+            self.edges.add(edge)
 
     def remove_edge(self, edge):
-        self.edges.remove(edge)
+        if edge in self.edges:
+            self.edges.remove(edge)
 
-    # TODO: Wie bestimmt man Kreise in dem Graphen?
-    # Annahme Nur die Komponenten aus connected_components sind Inputs
+    # Annahme: zusammenhaengender Graph
     def kruskal(self):
         # MST besitzt alle Knoten, sodass Kanten alle verbinden und minimale Kosten verursachen
         sorted_edges = sorted(self.edges, key=lambda e: e.weight)
         mst = Graph(self.vertices, set())
         mst_prime = copy.deepcopy(mst)
+        total_weight = 0
         for edge in sorted_edges:
             mst_prime.add_edge(edge)
             if mst.reachability_set_table() != mst_prime.reachability_set_table():
                 mst.add_edge(edge)
+                total_weight += edge.weight
             else:
                 mst_prime.remove_edge(edge)
-        return mst
+        return mst, total_weight
+
+    def prim(self, start_vertex):
+        sorted_edges = sorted(self.edges, key=lambda e: e.weight)
+        mst_vertices = {start_vertex}
+        mst_edges = set()
+        total_weight = 0
+        while mst_vertices != self.vertices:
+            for edge in sorted_edges:
+                new_vertices = {Vertex(edge.start), Vertex(edge.end)}
+                if len(new_vertices & mst_vertices) == 1:
+                    mst_vertices = mst_vertices | new_vertices
+                    mst_edges = mst_edges | {edge}
+                    total_weight += edge.weight
+                    sorted_edges.remove(edge)
+                    break
+        return Graph(mst_vertices, mst_edges), total_weight
+
+    def compute_mst(self):
+        sorted_edges = sorted(self.edges, key=lambda e: e.weight, reverse=True)
+        i = 0
+        graph = copy.deepcopy(self)
+
+        while i != len(sorted_edges)-1:
+            edge = sorted_edges[i]
+            graph.remove_edge(edge)
+            if len(graph.connected_components()) == 1:
+                graph.edges = graph.edges - {edge}
+            else:
+                graph.add_edge(edge)
+            if i < len(sorted_edges)-1:
+                i += 1
+
+        total_weight = sum([edge.weight for edge in graph.edges])
+        return Graph(graph.vertices, graph.edges), total_weight
+
+
+def print_vertices(graph):
+    for vertex in graph.vertices:
+        print(f"{vertex}")
+
+
+def print_edges(graph):
+    for edge in graph.edges:
+        print(f"{edge}")
+
+
+def print_graph(graph):
+    print_vertices(graph)
+    print_edges(graph)
+
+
+def print_shortest_paths(graph, start_vertex, method="dijsktra"):
+    for i in range(1, len(graph.vertices)+1):
+        if i != start_vertex.id:
+            target_vertex = Vertex(i)
+            if method == "dijsktra":
+                _, _, shortest_path = graph.dijsktra(start_vertex, target_vertex)
+            else:
+                _, _, shortest_path = graph.bellman_ford(start_vertex, target_vertex)
+            if len(shortest_path) != 1:
+                print(f"Kuerzester Weg von {start_vertex} zu {target_vertex}: {[v.id for v in shortest_path]}")
+            else:
+                print(f"Es existiert kein Weg von {start_vertex} zu {target_vertex}")
 
 
 def build_shortest_path(predecessors, distances, target_vertex):
@@ -254,6 +323,8 @@ def build_shortest_path(predecessors, distances, target_vertex):
     # Weg bis target_vertex zusammenbauen
     shortest_path = [target_vertex]
     k = target_vertex
+    if predecessors[k.id] is None:
+        return predecessors, distances, shortest_path
     while predecessors[k.id] != 0:
         k = Vertex(predecessors[k.id])
         shortest_path.insert(0, k)
@@ -299,7 +370,8 @@ def create_random_graph(n, m):
 
 def main():
     # Aufgabe 2.2.a
-    E1 = {Edge(1, 2, False), Edge(2, 7, False), Edge(5, 8, True), Edge(8, 6, True), Edge(8, 4, True), Edge(6, 4, True)}
+    E1 = {Edge(1, 2, False), Edge(2, 7, False), Edge(5, 8, True),
+          Edge(8, 6, True), Edge(8, 4, True), Edge(6, 4, True)}
     e1 = Edge(8, 6, False)
     print(e1 in E1)
     V1 = {Vertex(i) for i in range(1, 8+1)}
@@ -320,32 +392,32 @@ def main():
         print(f"{components}")
 
     # Aufgabe 3.4
-    n = 100
-    m = 200
+    # n = 100
+    # m = 200
+    # G2 = create_random_graph(n, m)
+    # for i in range(10):
+    #     v = random.randint(1, n)
+    #     start_r = time.time()
+    #     _ = G2.reachability_set(Vertex(v))
+    #     end_r = time.time()
+    #     print(f"Iteration {i + 1} - Benoetigte Rechenzeit fuer Erreichbarkeitsmenge: {end_r - start_r}")
 
-    G2 = create_random_graph(n, m)
-    for i in range(10):
-        v = random.randint(1, n)
-        start_r = time.time()
-        _ = G2.reachability_set(Vertex(v))
-        end_r = time.time()
-        print(f"Iteration {i + 1} - Benoetigte Rechenzeit fuer Erreichbarkeitsmenge: {end_r - start_r}")
+    # for i in range(10):
+    #     G3 = create_random_graph(n, m)
+    #     start_c = time.time()
+    #     _ = G3.connected_components()
+    #     end_c = time.time()
+    #     print(f"Iteration {i + 1} - Benoetigte Rechenzeit fuer Zusammenhangskomponente: {end_c - start_c}")
 
-    for i in range(10):
-        G3 = create_random_graph(n, m)
-        start_c = time.time()
-        _ = G3.connected_components()
-        end_c = time.time()
-        print(f"Iteration {i + 1} - Benoetigte Rechenzeit fuer Zusammenhangskomponente: {end_c - start_c}")
-
-    # Aufgabe 4.1
-    E2 = {Edge(5, 1, True, 5), Edge(2, 3, True, 3), Edge(2, 6, True, 4), Edge(6, 7, True, 1), Edge(7, 4, True, 2)}
+    # Aufgabe 4.1 mit Zielknoten 4
+    E2 = {Edge(5, 1, True, 5), Edge(2, 3, True, 3), Edge(2, 6, True, 4),
+          Edge(6, 7, True, 1), Edge(7, 4, True, 2)}
     V2 = {Vertex(i) for i in range(1, 7+1)}
     G2 = Graph(V2, E2)
     start_vertex = Vertex(2)
-    target_vertex = Vertex(4)
-    _, _, shortest_path = G2.dijkstra(start_vertex, target_vertex)
-    print(f"Kuerzester Weg von {start_vertex.id} zu {target_vertex.id}: {[v.id for v in shortest_path]}")
+    print("Graph G2:")
+    print_graph(G2)
+    print_shortest_paths(G2, start_vertex, "bellman_ford")
 
     # Aufgabe 4.3
     E4 = {Edge(1, 2, True, 4), Edge(2, 1, True, 3), Edge(1, 4, True, -2),
@@ -356,32 +428,39 @@ def main():
     G4 = Graph(V4, E4)
 
     start_vertex = Vertex(2)
-    for i in range(1, 5+1):
-        if i != start_vertex.id:
-            target_vertex = Vertex(i)
-            _, _, shortest_path = G4.bellman_ford(start_vertex, target_vertex)
-            print(f"Kuerzester Weg von {start_vertex.id} zu {target_vertex.id}: {[v.id for v in shortest_path]}")
+    print("Graph G4:")
+    print_graph(G4)
+    print_shortest_paths(G4, start_vertex, "bellman_ford")
 
-    sorted_edges4 = sorted(E4, key=lambda e: e.weight)
-    for e in sorted_edges4:
-        print(f"start={e.start} end={e.end} weight={e.weight}")
-
-    # Bsp 3.8
-    # TODO: An Aufgabe 5.5.a pruefen
-    E5 = {Edge(1, 6, False, 1), Edge(1, 2, False, 4), Edge(2, 5, False, 2),
-          Edge(2, 3, False, 3), Edge(1, 3, False, 5), Edge(2, 6, False, 5),
-          Edge(3, 6, False, 4), Edge(4, 3, False, 6), Edge(4, 5, False, 2),
-          Edge(3, 5, False, 3)}
-    V5 = {Vertex(i) for i in range(1, 6+1)}
+    # Graph aus Aufgabe 5.5
+    E5 = {Edge('A', 'B', False, 13), Edge('A', 'C', False, 6),
+          Edge('B', 'C', False, 7), Edge('B', 'D', False, 1),
+          Edge('C', 'D', False, 14), Edge('C', 'E', False, 8),
+          Edge('D', 'E', False, 9), Edge('D', 'F', False, 3),
+          Edge('E', 'F', False, 2), Edge('C', 'H', False, 20),
+          Edge('E', 'J', False, 18), Edge('G', 'H', False, 15),
+          Edge('G', 'I', False, 5), Edge('G', 'J', False, 19),
+          Edge('G', 'K', False, 10), Edge('H', 'J', False, 17),
+          Edge('I', 'K', False, 11), Edge('J', 'K', False, 16),
+          Edge('J', 'L', False, 4), Edge('K', 'L', False, 12)}
+    V5 = {Vertex(chr(letter)) for letter in range(ord('A'), ord('L')+1, 1)}
     G5 = Graph(V5, E5)
-    mst = G5.kruskal()
-    total_weight = 0
-    for vertex in mst.vertices:
-        print(vertex)
-    for edge in mst.edges:
-        print(edge)
-        total_weight += edge.weight
-    print(f"MST mit Staerke {total_weight}")
+
+    # Aufgabe 5.5.a
+    mst, total_weight = G5.kruskal()
+    print_graph(mst)
+    print(f"Minimaler Spannbaum mit Staerke (Kruskal): {total_weight}")
+
+    # Aufgabe 5.5.b
+    start_vertex = Vertex('J')
+    mst, total_weight = G5.prim(start_vertex)
+    print_graph(mst)
+    print(f"Minimaler Spannbaum mit Staerke (Prim): {total_weight}")
+
+    # Aufgabe 5.5.c mit Algorithmus aus Aufgabe 5.2
+    mst, total_weight = G5.compute_mst()
+    print_graph(mst)
+    print(f"Minimaler Spannbaum mit Staerke (5.2): {total_weight}")
     print("done")
 
 
