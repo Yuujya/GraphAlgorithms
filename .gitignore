@@ -1,3 +1,5 @@
 pyproject.toml
 __pycache__
+.vscode
+.venv
 graph_algorithms.egg-info
