@@ -65,9 +65,9 @@ class MixedGraph(DirectedGraph, UndirectedGraph):
         return False
 
     def is_adjacent(self, start_vertex, end_vertex):
-        if start_vertex in self.vertices:
+        if start_vertex not in self.vertices:
             raise VertexNotFoundError(start_vertex)
-        if end_vertex in self.vertices:
+        if end_vertex not in self.vertices:
             raise VertexNotFoundError(end_vertex)
         return Edge(start_vertex.id, end_vertex.id, True) in self.edges
 
