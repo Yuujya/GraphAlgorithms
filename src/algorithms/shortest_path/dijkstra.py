@@ -1,5 +1,5 @@
-from shortest_path_helper import init_distance_table, \
-                                 distance_argmin, distance, build_shortest_path
+from algorithms.shortest_path.shortest_path_helper \
+    import init_distance_table, distance_argmin, distance, build_shortest_path
 from data_structures.graph import Vertex
 from data_structures.undirected__graph import UndirectedGraph
 
