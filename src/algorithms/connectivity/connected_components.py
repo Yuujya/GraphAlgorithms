@@ -1,6 +1,7 @@
 from data_structures.graph import Vertex
 from data_structures.mixed_graph import MixedGraph, Edge
 from data_structures.undirected__graph import UndirectedGraph
+from algorithms.connectivity.reachability_set import reachability_set
 
 
 def create_undirected_graph(mixed_graph: MixedGraph):
@@ -20,7 +21,7 @@ def connected_components(undirected_graph: UndirectedGraph) -> \
 
     while vertices_to_check:
         k = next(iter(vertices_to_check))
-        reachable_vertices = undirected_graph.reachability_set(k)
+        reachable_vertices = reachability_set(undirected_graph, k)
         connected_components.append(reachable_vertices)
         vertices_to_check = vertices_to_check.\
             difference(reachable_vertices)

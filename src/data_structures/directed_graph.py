@@ -1,12 +1,13 @@
-from Graph import Graph, Vertex
+from data_structures.graph import Graph, Vertex
 from util.graph_errors import VertexNotFoundError
 
 
 class Edge:
-    def __init__(self, start, end, id):
+    def __init__(self, start, end, weight=0):
         self.start = start
         self.end = end
-        self.id = id
+        self.directed = True
+        self.weight = weight
 
     def __hash__(self):
         return hash((self.start, self.end))
@@ -25,9 +26,6 @@ class DirectedGraph(Graph):
     def __init__(self, vertices: set[Vertex], edges: set[Edge]):
         super().__init__(vertices, edges)
         self.directed = True
-
-    def __eq__(self, other):
-        return self.vertices == other.vertices and self.edges == other.edges
 
     def directed_degree(self, vertex: Vertex):
         if vertex not in self.vertices:

@@ -1,5 +1,6 @@
 import copy
 from data_structures.undirected__graph import UndirectedGraph
+from algorithms.connectivity.connected_components import connected_components
 
 
 def compute_mst(undirected_graph: UndirectedGraph):
@@ -11,7 +12,7 @@ def compute_mst(undirected_graph: UndirectedGraph):
     while i != len(sorted_edges)-1:
         edge = sorted_edges[i]
         graph.remove_edge(edge)
-        if len(graph.connected_components()) == 1:
+        if len(connected_components(graph)) == 1:
             graph.edges = graph.edges - {edge}
         else:
             graph.add_edge(edge)

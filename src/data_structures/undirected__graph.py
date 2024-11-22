@@ -1,4 +1,4 @@
-from Graph import Graph, Vertex
+from data_structures.graph import Graph, Vertex
 from util.graph_errors import VertexNotFoundError
 
 
@@ -25,9 +25,6 @@ class UndirectedGraph(Graph):
     def __init__(self, vertices: set[Vertex], edges: set[Edge]):
         super().__init__(vertices, edges)
         self.directed = False
-
-    def __eq__(self, other):
-        return self.vertices == other.vertices and self.edges == other.edges
 
     def undirected_degree(self, vertex: Vertex):
         if vertex not in self.vertices:

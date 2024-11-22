@@ -1,4 +1,5 @@
 from util.graph_errors import VertexNotFoundError, EdgeNotFoundError
+from data_structures.edge import Edge
 
 
 class Vertex:
@@ -50,3 +51,44 @@ class Graph:
     def print_graph(self):
         self.print_vertices()
         self.print_edges()
+        
+    def is_incident(self, vertex, edge):
+        if vertex not in self.vertices:
+            raise VertexNotFoundError(vertex)
+        if edge not in self.edges:
+            raise EdgeNotFoundError(edge)
+        if vertex.id == edge.start or vertex.id == edge.end:
+            return True
+        return False
+
+    def is_adjacent(self, start_vertex, end_vertex):
+        if start_vertex not in self.vertices:
+            raise VertexNotFoundError(start_vertex)
+        if end_vertex not in self.vertices:
+            raise VertexNotFoundError(end_vertex)
+        return Edge(start_vertex.id, end_vertex.id, True) in self.edges
+
+    def is_isolated(self, vertex):
+        if vertex not in self.vertices:
+            raise VertexNotFoundError(vertex)
+        if self.degree(vertex) == 0:
+            return True
+        return False
+
+    def adjacent_vertices(self, start_vertex):
+        if start_vertex not in self.vertices:
+            raise VertexNotFoundError(start_vertex)
+        adjacent_vertices = set()
+        for vertex in self.vertices:
+            if self.is_adjacent(start_vertex, vertex):
+                adjacent_vertices.add(vertex)
+        return adjacent_vertices
+
+    def incident_edges(self, start_vertex):
+        if start_vertex not in self.vertices:
+            raise VertexNotFoundError(start_vertex)
+        incident_edges = set()
+        for edge in self.edges:
+            if self.is_incident(start_vertex, edge):
+                incident_edges.add(edge)
+        return incident_edges
