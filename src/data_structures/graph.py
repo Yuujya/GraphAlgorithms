@@ -51,7 +51,7 @@ class Graph:
     def print_graph(self):
         self.print_vertices()
         self.print_edges()
-        
+
     def is_incident(self, vertex, edge):
         if vertex not in self.vertices:
             raise VertexNotFoundError(vertex)
