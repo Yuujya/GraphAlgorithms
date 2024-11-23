@@ -10,7 +10,7 @@ class Edge:
         self.weight = weight
 
     def __hash__(self):
-        return hash((self.start, self.end))
+        return hash((min(self.start, self.end), max(self.start, self.end)))
 
     def __eq__(self, other):
         return self.start == other.start and self.end == other.end
