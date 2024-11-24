@@ -25,6 +25,18 @@ class Graph:
     def __eq__(self, other):
         return self.vertices == other.vertices and self.edges == other.edges
 
+    def get_edge(self, start_vertex, end_vertex):
+        for edge in self.edges:
+            if edge == Edge(start_vertex.id, end_vertex.id):
+                return edge
+        return None
+
+    def get_edge_weight(self, start_vertex, end_vertex):
+        edge = self.get_edge(start_vertex, end_vertex)
+        if edge is None:
+            return 0
+        return edge.weight
+
     def add_vertex(self, vertex):
         self.vertices.add(vertex)
 

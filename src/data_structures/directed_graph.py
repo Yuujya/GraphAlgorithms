@@ -1,11 +1,20 @@
 from data_structures.graph import Graph, Vertex
 from util.graph_errors import VertexNotFoundError
+from typing import NamedTuple
+
+
+class EdgeKey(NamedTuple):
+    start: int
+    end: int
 
 
 class Edge:
-    def __init__(self, start, end, weight=0):
+    # Kantenbewertung gleich eins um kuerzesten Weg
+    # = am wenigsten Kanten durchlaufen bis Ziel
+    def __init__(self, start, end, weight=1):
         self.start = start
         self.end = end
+        self.edge = EdgeKey(self.start, self.end)
         self.directed = True
         self.weight = weight
 
