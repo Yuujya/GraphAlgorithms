@@ -37,15 +37,20 @@ def distance_argmin(distances, vertices: set[Vertex]):
     return min_index.id
 
 
-def build_shortest_path(predecessors, distances, target_vertex: Vertex):
+def build_shortest_path(mixed_graph: MixedGraph,
+                        predecessors,
+                        distances, target_vertex: Vertex):
     if not target_vertex:
-        return predecessors, distances, []
+        return predecessors, distances
     # Weg bis target_vertex zusammenbauen
     shortest_path = [target_vertex]
     k = target_vertex
     if predecessors[k.id] is None:
-        return predecessors, distances, shortest_path
+        return [], 0
+    total_distance = mixed_graph.get_edge_weight(Vertex(predecessors[k.id]), k)
     while predecessors[k.id] != 0:
         k = Vertex(predecessors[k.id])
         shortest_path.insert(0, k)
-    return predecessors, distances, shortest_path
+        total_distance += mixed_graph.get_edge_weight(
+            Vertex(predecessors[k.id]), k)
+    return shortest_path, total_distance

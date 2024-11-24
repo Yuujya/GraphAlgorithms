@@ -5,6 +5,7 @@ from data_structures.mixed_graph import MixedGraph
 
 
 # Funktioniert sowohl fuer ungerichtete als auch gerichtete Graphen
+# TODO: noch nicht an ungerichteten Graphen getestet
 def dijkstra(mixed_graph: MixedGraph,
              start_vertex: Vertex,
              target_vertex: Vertex = None):
@@ -25,4 +26,5 @@ def dijkstra(mixed_graph: MixedGraph,
                 distances[adjacent_vertex.id] = rhs
                 predecessors[adjacent_vertex.id] = i.id
 
-    return build_shortest_path(predecessors, distances, target_vertex)
+    return build_shortest_path(mixed_graph, predecessors,
+                               distances, target_vertex)
