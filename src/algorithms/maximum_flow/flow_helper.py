@@ -58,7 +58,8 @@ def outgoing_flow(flow: dict[EdgeKey, int],
 def total_flow(flow: dict[EdgeKey, int],
                edges: set[Edge],
                vertex: Vertex):
-    return ingoing_flow(flow, edges, vertex) - outgoing_flow(flow, edges, vertex)
+    return ingoing_flow(flow, edges, vertex) - \
+        outgoing_flow(flow, edges, vertex)
 
 
 # Flusseigenschaft
