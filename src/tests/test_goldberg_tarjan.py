@@ -5,7 +5,7 @@ from data_structures.capacitated_network import CapacitatedNetwork, Capacity
 from data_structures.graph import Vertex
 
 
-class TestEdmondsKarp(unittest.TestCase):
+class TestGoldbergTarjan(unittest.TestCase):
     def test_compute_maximum_flow(self):
         vertices = {Vertex('s'), Vertex('A'), Vertex('C'),
                     Vertex('B'), Vertex('D'), Vertex('t')}
@@ -18,12 +18,13 @@ class TestEdmondsKarp(unittest.TestCase):
                     ('C', 'B'): Capacity(0, 6), ('C', 't'): Capacity(0, 4),
                     ('B', 't'): Capacity(0, 3), ('B', 'D'): Capacity(0, 8),
                     ('A', 'D'): Capacity(0, 10), ('D', 't'): Capacity(0, 12)}
-        capacitated_network = CapacitatedNetwork(vertices, edges, capacity)
-        start_vertex = Vertex('s')
-        target_vertex = Vertex('t')
+        source = Vertex('s')
+        sink = Vertex('t')
+        capacitated_network = CapacitatedNetwork(vertices, edges, capacity,
+                                                 source, sink)
         maximum_flow = compute_maximum_flow(capacitated_network,
-                                            start_vertex,
-                                            target_vertex)
+                                            source,
+                                            sink)
         expected_flow = 19
         self.assertEqual(maximum_flow, expected_flow)
 
@@ -41,12 +42,11 @@ class TestEdmondsKarp(unittest.TestCase):
                     ('C', 'B'): Capacity(0, 9), ('A', 'C'): Capacity(0, 12),
                     ('B', 'D'): Capacity(0, 14), ('D', 'C'): Capacity(0, 7),
                     ('C', 't'): Capacity(0, 20), ('D', 't'): Capacity(0, 4)}
-        capacitated_network = CapacitatedNetwork(vertices, edges, capacity)
-        start_vertex = Vertex('s')
-        target_vertex = Vertex('t')
-        maximum_flow = compute_maximum_flow(capacitated_network,
-                                            start_vertex,
-                                            target_vertex)
+        source = Vertex('s')
+        sink = Vertex('t')
+        capacitated_network = CapacitatedNetwork(vertices, edges, capacity,
+                                                 source, sink)
+        maximum_flow = compute_maximum_flow(capacitated_network, source, sink)
         expected_flow = 23
         print(maximum_flow)
         self.assertEqual(maximum_flow, expected_flow)
