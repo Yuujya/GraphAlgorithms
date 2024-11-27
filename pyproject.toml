@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "graph_algorithms"
+version = "0.1.1"
+description = "Algorithmen aus der Vorlesung Diskrete Mathematik"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Michael Song Mai", email = "michael_song.mai@hsbi.de"}
+]
+dependencies = []
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
